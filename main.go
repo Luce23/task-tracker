@@ -5,6 +5,11 @@ import (
 	"os"
 )
 
+type Task struct {
+	ID          int
+	Description string
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		printUsage()
@@ -12,7 +17,10 @@ func main() {
 	}
 
 	switch os.Args[1] {
-	case "add", "list", "update", "delete", "mark-in-progress", "mark-done":
+	case "list":
+		tasks := []Task{}
+		fmt.Printf("Задач в памяти: %d\n", len(tasks))
+	case "add", "update", "delete", "mark-in-progress", "mark-done":
 		fmt.Printf("Команда %q распознана\n", os.Args[1])
 	case "--help", "-h":
 		printUsage()
