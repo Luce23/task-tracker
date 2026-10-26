@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 type Task struct {
@@ -16,11 +17,26 @@ func main() {
 		return
 	}
 
+	tasks := []Task{}
+
 	switch os.Args[1] {
+	case "add":
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, "Укажите описание")
+			os.Exit(1)
+		}
+
+		task := Task{
+			ID:          len(tasks) + 1,
+			Description: strings.Join(os.Args[2:], " "),
+		}
+		tasks = append(tasks, task)
+
+		fmt.Printf("Задача добавлена (ID: %d)\n", task.ID)
+
 	case "list":
-		tasks := []Task{}
 		fmt.Printf("Задач в памяти: %d\n", len(tasks))
-	case "add", "update", "delete", "mark-in-progress", "mark-done":
+	case "update", "delete", "mark-in-progress", "mark-done":
 		fmt.Printf("Команда %q распознана\n", os.Args[1])
 	case "--help", "-h":
 		printUsage()
