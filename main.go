@@ -35,7 +35,13 @@ func main() {
 		fmt.Printf("Задача добавлена (ID: %d)\n", task.ID)
 
 	case "list":
-		fmt.Printf("Задач в памяти: %d\n", len(tasks))
+		if len(tasks) == 0 {
+			fmt.Println("Задач нет.")
+			return
+		}
+		for _, task := range tasks {
+			fmt.Printf("%d. %s\n", task.ID, task.Description)
+		}
 	case "update", "delete", "mark-in-progress", "mark-done":
 		fmt.Printf("Команда %q распознана\n", os.Args[1])
 	case "--help", "-h":
