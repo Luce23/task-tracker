@@ -9,6 +9,7 @@ import (
 type Task struct {
 	ID          int
 	Description string
+	Status      string
 }
 
 func main() {
@@ -29,10 +30,11 @@ func main() {
 		task := Task{
 			ID:          len(tasks) + 1,
 			Description: strings.Join(os.Args[2:], " "),
+			Status:      "todo",
 		}
 		tasks = append(tasks, task)
 
-		fmt.Printf("Задача добавлена (ID: %d)\n", task.ID)
+		fmt.Printf("Задача добавлена (ID: %d, статус: %s)\n", task.ID, task.Status)
 
 	case "list":
 		if len(tasks) == 0 {
@@ -40,7 +42,7 @@ func main() {
 			return
 		}
 		for _, task := range tasks {
-			fmt.Printf("%d. %s\n", task.ID, task.Description)
+			fmt.Printf("%d. [%s] %s\n", task.ID, task.Status, task.Description)
 		}
 	case "update", "delete", "mark-in-progress", "mark-done":
 		fmt.Printf("Команда %q распознана\n", os.Args[1])
