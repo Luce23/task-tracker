@@ -125,6 +125,17 @@ func updateTask(tasks []Task, id int, description string) error {
 	return nil
 }
 
+func markTask(tasks []Task, id int, status string) error {
+	i, err := findTask(tasks, id)
+	if err != nil {
+		return err
+	}
+
+	tasks[i].Status = status
+	tasks[i].UpdatedAt = time.Now().UTC()
+	return nil
+}
+
 func printTasks(tasks []Task) {
 	if len(tasks) == 0 {
 		fmt.Println("Задач нет.")
@@ -229,7 +240,33 @@ func main() {
 		fmt.Printf("Задача %d удалена\n", id)
 
 	case "mark-in-progress", "mark-done":
-		fmt.Printf("Команда %q распознана\n", os.Args[1])
+		if len(os.Args) != 3 {
+			fmt.Fprintf(os.Stderr, "Использование: %s <id>\n", os.Args[1])
+			os.Exit(1)
+		}
+
+		id, err := parseID(os.Args[2])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		status := "done"
+		if os.Args[1] == "mark-in-progress" {
+			status = "in-progress"
+		}
+
+		if err := markTask(tasks, id, status); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err := saveTasks(tasks); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("Задача %d отмечена как %s\n", id, status)
+
 	default:
 		fmt.Fprintf(os.Stderr, "Неизвестная команда: %s\n", os.Args[1])
 		printUsage()
