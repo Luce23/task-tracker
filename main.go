@@ -136,6 +136,20 @@ func markTask(tasks []Task, id int, status string) error {
 	return nil
 }
 
+func filterTasks(tasks []Task, status string) ([]Task, error) {
+	if status != "todo" && status != "in-progress" && status != "done" {
+		return nil, fmt.Errorf("неизвестный статус %q", status)
+	}
+
+	result := make([]Task, 0)
+	for _, task := range tasks {
+		if task.Status == status {
+			result = append(result, task)
+		}
+	}
+	return result, nil
+}
+
 func printTasks(tasks []Task) {
 	if len(tasks) == 0 {
 		fmt.Println("Задач нет.")
@@ -177,29 +191,21 @@ func main() {
 		fmt.Printf("Задача добавлена (ID: %d)\n", id)
 
 	case "list":
-		if len(tasks) == 0 {
-			fmt.Println("Задач нет.")
+		if len(os.Args) == 2 {
+			printTasks(tasks)
 			return
 		}
-		for _, task := range tasks {
-			fmt.Printf("%d. [%s] %s\n", task.ID, task.Status, task.Description)
-		}
-	case "get":
 		if len(os.Args) != 3 {
-			fmt.Fprintln(os.Stderr, "Использование: get <id>")
+			fmt.Fprintln(os.Stderr, "Использование: list [todo|in-progress|done]")
 			os.Exit(1)
 		}
-		id, err := parseID(os.Args[2])
+
+	filtered, err := filterTasks(tasks, os.Args[2])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-		i, err := findTask(tasks, id)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		printTasks([]Task{tasks[i]})
+		printTasks(filtered)
 	case "update":
 		if len(os.Args) < 4 {
 			fmt.Fprintln(os.Stderr, "Использование: update <id> <описание>")
