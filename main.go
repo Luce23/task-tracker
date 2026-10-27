@@ -4,12 +4,25 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 )
 
 type Task struct {
 	ID          int
 	Description string
 	Status      string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+func nextID(tasks []Task) int {
+	maxID := 0
+	for _, task := range tasks {
+		if task.ID > maxID {
+			maxID = task.ID
+		}
+	}
+	return maxID + 1
 }
 
 func main() {
@@ -26,11 +39,14 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Укажите описание")
 			os.Exit(1)
 		}
+		now := time.Now().UTC()
 
 		task := Task{
-			ID:          len(tasks) + 1,
+			ID:          nextID(tasks),
 			Description: strings.Join(os.Args[2:], " "),
 			Status:      "todo",
+			CreatedAt:   now,
+			UpdatedAt:   now,
 		}
 		tasks = append(tasks, task)
 
