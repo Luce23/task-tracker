@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -8,11 +9,11 @@ import (
 )
 
 type Task struct {
-	ID          int
-	Description string
-	Status      string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          int       `json:"id"`
+	Description string    `json:"description"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
 }
 
 func nextID(tasks []Task) int {
@@ -49,6 +50,13 @@ func main() {
 			UpdatedAt:   now,
 		}
 		tasks = append(tasks, task)
+
+		data, err := json.MarshalIndent(task, "", " ")
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		fmt.Println(string(data))
 
 		fmt.Printf("Задача добавлена (ID: %d, статус: %s)\n", task.ID, task.Status)
 
