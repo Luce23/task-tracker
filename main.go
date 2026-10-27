@@ -64,6 +64,23 @@ func saveTasks(tasks []Task) error {
 	return nil
 }
 
+func addTask(tasks *[]Task, description string) (int, error) {
+	description = strings.TrimSpace(description)
+	if description == "" {
+		return 0, errors.New("описание не может быть пустым")
+	}
+	now := time.Now().UTC()
+	task := Task{
+		ID:          nextID(*tasks),
+		Description: description,
+		Status:      "todo",
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
+	*tasks = append(*tasks, task)
+	return task.ID, nil
+}
+
 func main() {
 	if len(os.Args) < 2 || os.Args[1] == "--help" || os.Args[1] == "-h" {
 		printUsage()
@@ -82,18 +99,17 @@ func main() {
 			fmt.Fprintln(os.Stderr, "Укажите описание")
 			os.Exit(1)
 		}
-		now := time.Now().UTC()
 
-		task := Task{
-			ID:          nextID(tasks),
-			Description: strings.Join(os.Args[2:], " "),
-			Status:      "todo",
-			CreatedAt:   now,
-			UpdatedAt:   now,
+		id, err := addTask(&tasks, strings.Join(os.Args[2:], " "))
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
-		tasks = append(tasks, task)
-
-		fmt.Printf("Задача добавлена (ID: %d, статус: %s)\n", task.ID, task.Status)
+		if err := saveTasks(tasks); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		fmt.Printf("Задача добавлена (ID: %d)\n", id)
 
 	case "list":
 		if len(tasks) == 0 {
