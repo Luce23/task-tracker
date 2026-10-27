@@ -99,6 +99,16 @@ func findTask(tasks []Task, id int) (int, error) {
 	return -1, fmt.Errorf("Задача с ID %d не найдена", id)
 }
 
+func deleteTask(tasks *[]Task, id int) error {
+	i, err := findTask(*tasks, id)
+	if err != nil {
+		return err
+	}
+	*tasks = append((*tasks)[:i], (*tasks)[i+1:]...)
+	return nil
+
+}
+
 func updateTask(tasks []Task, id int, description string) error {
 	description = strings.TrimSpace(description)
 	if description == "" {
@@ -198,8 +208,27 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Printf("Задача %d обновлена\n", id)
+	case "delete":
+		if len(os.Args) != 3 {
+			fmt.Fprintln(os.Stderr, "Использование: delete <id>")
+			os.Exit(1)
+		}
+		id, err := parseID(os.Args[2])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err := deleteTask(&tasks, id); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		if err := saveTasks(tasks); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		fmt.Printf("Задача %d удалена\n", id)
 
-	case "delete", "mark-in-progress", "mark-done":
+	case "mark-in-progress", "mark-done":
 		fmt.Printf("Команда %q распознана\n", os.Args[1])
 	default:
 		fmt.Fprintf(os.Stderr, "Неизвестная команда: %s\n", os.Args[1])
