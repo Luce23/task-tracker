@@ -30,6 +30,19 @@ func nextID(tasks []Task) int {
 
 const dataFile = "tasks.json"
 
+func validateTask(task Task) error {
+	if task.ID < 1 {
+		return errors.New("ID должен быть положительным")
+	}
+	if strings.TrimSpace(task.Description) == "" {
+		return errors.New("описание не может быть пустым")
+	}
+	if task.Status != "todo" && task.Status != "in-progress" && task.Status != "done" {
+		return fmt.Errorf("недопустимый статус %q", task.Status)
+	}
+	return nil
+}
+
 func loadTasks() ([]Task, error) {
 	data, err := os.ReadFile(dataFile)
 	if errors.Is(err, os.ErrNotExist) {
@@ -55,6 +68,11 @@ func loadTasks() ([]Task, error) {
 }
 
 func saveTasks(tasks []Task) error {
+	for _, task := range tasks {
+		if err := validateTask(task); err != nil {
+			return fmt.Errorf("задача %d некорректна: %w", task.ID, err)
+		}
+	}
 	data, err := json.MarshalIndent(tasks, "", " ")
 	if err != nil {
 		return fmt.Errorf("encode tasks: %w", err)
@@ -200,7 +218,7 @@ func main() {
 			os.Exit(1)
 		}
 
-	filtered, err := filterTasks(tasks, os.Args[2])
+		filtered, err := filterTasks(tasks, os.Args[2])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
