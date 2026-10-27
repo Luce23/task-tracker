@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -26,13 +27,54 @@ func nextID(tasks []Task) int {
 	return maxID + 1
 }
 
+const dataFile = "tasks.json"
+
+func loadTasks() ([]Task, error) {
+	data, err := os.ReadFile(dataFile)
+	if errors.Is(err, os.ErrNotExist) {
+		tasks := []Task{}
+		if err := saveTasks(tasks); err != nil {
+			return nil, err
+		}
+		return tasks, nil
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", dataFile, err)
+	}
+
+	var tasks []Task
+	if err := json.Unmarshal(data, &tasks); err != nil {
+		return nil, fmt.Errorf("decode %s: %w", dataFile, err)
+	}
+	if tasks == nil {
+		tasks = []Task{}
+	}
+	return tasks, nil
+}
+
+func saveTasks(tasks []Task) error {
+	data, err := json.MarshalIndent(tasks, "", " ")
+	if err != nil {
+		return fmt.Errorf("encode tasks: %w", err)
+	}
+	if err := os.WriteFile(dataFile, append(data, '\n'), 0644); err != nil {
+		return fmt.Errorf("write %s: %w", dataFile, err)
+	}
+	return nil
+}
+
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 2 || os.Args[1] == "--help" || os.Args[1] == "-h" {
 		printUsage()
 		return
 	}
 
-	tasks := []Task{}
+	tasks, err := loadTasks()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 
 	switch os.Args[1] {
 	case "add":
@@ -51,13 +93,6 @@ func main() {
 		}
 		tasks = append(tasks, task)
 
-		data, err := json.MarshalIndent(task, "", " ")
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		fmt.Println(string(data))
-
 		fmt.Printf("Задача добавлена (ID: %d, статус: %s)\n", task.ID, task.Status)
 
 	case "list":
@@ -70,8 +105,6 @@ func main() {
 		}
 	case "update", "delete", "mark-in-progress", "mark-done":
 		fmt.Printf("Команда %q распознана\n", os.Args[1])
-	case "--help", "-h":
-		printUsage()
 	default:
 		fmt.Fprintf(os.Stderr, "Неизвестная команда: %s\n", os.Args[1])
 		printUsage()
