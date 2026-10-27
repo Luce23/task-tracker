@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -81,6 +82,33 @@ func addTask(tasks *[]Task, description string) (int, error) {
 	return task.ID, nil
 }
 
+func parseID(raw string) (int, error) {
+	id, err := strconv.Atoi(raw)
+	if err != nil || id < 1 {
+		return 0, fmt.Errorf("ID должен быть положительным числом: %q", raw)
+	}
+	return id, nil
+}
+
+func findTask(tasks []Task, id int) (int, error) {
+	for i := range tasks {
+		if tasks[i].ID == id {
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("Задача с ID %d не найдена", id)
+}
+
+func printTasks(tasks []Task) {
+	if len(tasks) == 0 {
+		fmt.Println("Задач нет.")
+		return
+	}
+	for _, task := range tasks {
+		fmt.Printf("%d. [%s] %s\n", task.ID, task.Status, task.Description)
+	}
+}
+
 func main() {
 	if len(os.Args) < 2 || os.Args[1] == "--help" || os.Args[1] == "-h" {
 		printUsage()
@@ -119,6 +147,23 @@ func main() {
 		for _, task := range tasks {
 			fmt.Printf("%d. [%s] %s\n", task.ID, task.Status, task.Description)
 		}
+	case "get":
+		if len(os.Args) != 3 {
+			fmt.Fprintln(os.Stderr, "Использование: get <id>")
+			os.Exit(1)
+		}
+		id, err := parseID(os.Args[2])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		i, err := findTask(tasks, id)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		printTasks([]Task{tasks[i]})
+
 	case "update", "delete", "mark-in-progress", "mark-done":
 		fmt.Printf("Команда %q распознана\n", os.Args[1])
 	default:
@@ -131,6 +176,7 @@ func main() {
 func printUsage() {
 	fmt.Println(`Использование:
   task-cli add "описание"
+  task-cli get <id>
   task-cli update <id> "новое описание"
   task-cli delete <id>
   task-cli mark-in-progress <id>
