@@ -224,6 +224,24 @@ func main() {
 			os.Exit(1)
 		}
 		printTasks(filtered)
+	case "get":
+		if len(os.Args) != 3 {
+			fmt.Fprintln(os.Stderr, "Использование: get <id>")
+			os.Exit(1)
+		}
+
+		id, err := parseID(os.Args[2])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		index, err := findTask(tasks, id)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		printTasks([]Task{tasks[index]})
+
 	case "update":
 		if len(os.Args) < 4 {
 			fmt.Fprintln(os.Stderr, "Использование: update <id> <описание>")

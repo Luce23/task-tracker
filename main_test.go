@@ -84,3 +84,22 @@ func TestFilterTasks(t *testing.T) {
 		t.Fatal("filterTasks should reject an unknown status")
 	}
 }
+
+func TestFindTask(t *testing.T) {
+	tasks := []Task{
+		{ID: 1, Description: "first"},
+		{ID: 7, Description: "second"},
+	}
+
+	index, err := findTask(tasks, 7)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if index != 1 {
+		t.Fatalf("index = %d; want 1", index)
+	}
+
+	if _, err := findTask(tasks, 99); err == nil {
+		t.Fatal("findTask should return an error for missing ID")
+	}
+}
